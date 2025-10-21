@@ -16,6 +16,25 @@ link_directories(${CMAKE_CURRENT_SOURCE_DIR}/../target/debug)
 # Add the C test executable
 add_executable(test_foxdbg test.c)
 
-# Link the Rust static library
-target_link_libraries(test_foxdbg foxdbg_rs)
-target_link_libraries(test_foxdbg m)
+if (MSVC)
+  # Match Rust’s /MD(/MDd) to avoid LNK4098
+  set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+endif()
+
+# Link against the Rust static library and necessary system libraries
+if (WIN32)
+    target_link_libraries(
+        test_foxdbg
+        foxdbg_rs
+        ntdll
+        bcrypt
+        userenv
+        advapi32
+    )
+else()
+    target_link_libraries(
+        test_foxdbg
+        foxdbg_rs
+        m
+    )
+endif()

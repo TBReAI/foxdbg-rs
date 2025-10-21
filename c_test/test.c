@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include "foxdbg.h"
-#include<unistd.h>
 
 int main() {
     printf("Calling foxdbg_init() from C...\n");
