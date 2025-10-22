@@ -1,7 +1,7 @@
 .PHONY: all rust ctest test clean
 
 # Define build directories
-RUST_TARGET_DIR := target/debug
+RUST_TARGET_DIR := target/release
 BUILD_DIR := build
 CMAKE_BUILD_DIR := c_test/build
 
@@ -16,7 +16,7 @@ all: test
 # Build the Rust static library and generate the C header
 rust:
 	@echo "Building Rust static library and generating $(C_HEADER)..."
-	cargo build
+	cargo build --release
 
 # Build the C test executable using CMake
 ctest: rust
