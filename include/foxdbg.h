@@ -5,6 +5,80 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+typedef enum foxdbg_channel_type_t {
+  FOXDBG_CHANNEL_TYPE_IMAGE,
+  FOXDBG_CHANNEL_TYPE_POINTCLOUD,
+  FOXDBG_CHANNEL_TYPE_CUBES,
+  FOXDBG_CHANNEL_TYPE_LINES,
+  FOXDBG_CHANNEL_TYPE_POSE,
+  FOXDBG_CHANNEL_TYPE_TRANSFORM,
+  FOXDBG_CHANNEL_TYPE_LOCATION,
+  FOXDBG_CHANNEL_TYPE_FLOAT,
+  FOXDBG_CHANNEL_TYPE_INTEGER,
+  FOXDBG_CHANNEL_TYPE_BOOLEAN,
+} foxdbg_channel_type_t;
+
+typedef struct foxdbg_color_t {
+  float r;
+  float g;
+  float b;
+  float a;
+} foxdbg_color_t;
+
+typedef struct foxdbg_vector3_t {
+  float x;
+  float y;
+  float z;
+} foxdbg_vector3_t;
+
+typedef struct foxdbg_vector4_t {
+  float x;
+  float y;
+  float z;
+  float w;
+} foxdbg_vector4_t;
+
+typedef struct foxdbg_pose_t {
+  struct foxdbg_vector3_t position;
+  struct foxdbg_vector3_t orientation;
+  struct foxdbg_color_t color;
+} foxdbg_pose_t;
+
+typedef struct foxdbg_cube_t {
+  struct foxdbg_vector3_t position;
+  struct foxdbg_vector3_t size;
+  struct foxdbg_vector3_t orientation;
+  struct foxdbg_color_t color;
+} foxdbg_cube_t;
+
+typedef struct foxdbg_transform_t {
+  const char *id;
+  const char *parent_id;
+  struct foxdbg_vector3_t position;
+  struct foxdbg_vector3_t orientation;
+} foxdbg_transform_t;
+
+typedef struct foxdbg_line_t {
+  struct foxdbg_vector3_t start;
+  struct foxdbg_vector3_t end;
+  struct foxdbg_color_t color;
+  float thickness;
+} foxdbg_line_t;
+
+typedef struct foxdbg_location_t {
+  uint32_t timestamp_sec;
+  uint32_t timestamp_nsec;
+  double latitude;
+  double longitude;
+  double altitude;
+} foxdbg_location_t;
+
+typedef struct foxdbg_image_info_t {
+  int32_t width;
+  int32_t height;
+  int32_t channels;
+} foxdbg_image_info_t;
+
 /**
  * Initializes the debugging system and starts the server thread.
  */
@@ -24,12 +98,14 @@ void foxdbg_shutdown(void);
  * Creates a new channel (topic) to publish data to Foxglove. It returns a channel ID for
  * use with other functions.
  */
-int foxdbg_add_channel(const char *topic_name, int channel_type, int target_hz);
+int foxdbg_add_channel(const char *topic_name,
+                       enum foxdbg_channel_type_t channel_type,
+                       int target_hz);
 
 /**
  * Creates a channel to receive data from Foxglove (for simple types like float, integer, boolean).
  */
-int foxdbg_add_rx_channel(const char *topic_name, int channel_type);
+int foxdbg_add_rx_channel(const char *topic_name, enum foxdbg_channel_type_t channel_type);
 
 /**
  * Writes a data payload to a specified channel.
@@ -39,4 +115,4 @@ void foxdbg_write_channel(const char *topic_name, const void *data, uintptr_t si
 /**
  * Writes metadata for a channel, used for types like images to specify dimensions.
  */
-void foxdbg_write_channel_info(int channel_id, const void *data, uintptr_t size);
+void foxdbg_write_channel_info(const char *topic_name, const void *data, uintptr_t size);

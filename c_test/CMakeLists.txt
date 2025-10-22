@@ -11,7 +11,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/../include)
 
 # Add the directory where the Rust static library is located (relative to c_test/CMakeLists.txt)
-link_directories(${CMAKE_CURRENT_SOURCE_DIR}/../target/debug)
+link_directories(${CMAKE_CURRENT_SOURCE_DIR}/../target/release)
 
 # Add the C test executable
 add_executable(test_foxdbg test.c)
