@@ -1,14 +1,16 @@
 use std::ffi::c_void;
 
 use foxglove::bytes::{BufMut, Bytes};
-use foxglove::schemas::{CompressedImage, Timestamp};
+use foxglove::schemas::{CompressedImage, PackedElementField, PointCloud, Pose, Timestamp};
 use foxglove::{Context, Encode, PartialMetadata};
 use turbojpeg::{Compressor, Image, PixelFormat};
+
+use std::{mem, slice};
 
 use crate::channel_schemas::{Bool, Float, Integer};
 
 use crate::state::{self, ChannelInfo};
-use crate::{foxdbg_channel_type_t, foxdbg_image_info_t};
+use crate::{foxdbg_channel_type_t, foxdbg_image_info_t, foxdbg_vector4_t};
 
 pub fn write_channel(topic_name: &str, data: *const c_void, size: usize) {
     let channels = state::CHANNELS.lock().unwrap();
@@ -27,7 +29,9 @@ pub fn write_channel(topic_name: &str, data: *const c_void, size: usize) {
         foxdbg_channel_type_t::FOXDBG_CHANNEL_TYPE_IMAGE => {
             write_image(&mut buf, data, size, &channel_info.channel_info)
         }
-        foxdbg_channel_type_t::FOXDBG_CHANNEL_TYPE_POINTCLOUD => {}
+        foxdbg_channel_type_t::FOXDBG_CHANNEL_TYPE_POINTCLOUD => {
+            write_pointcloud(&mut buf, data, size)
+        }
         foxdbg_channel_type_t::FOXDBG_CHANNEL_TYPE_CUBES => {}
         foxdbg_channel_type_t::FOXDBG_CHANNEL_TYPE_LINES => {}
         foxdbg_channel_type_t::FOXDBG_CHANNEL_TYPE_POSE => {}
@@ -36,6 +40,42 @@ pub fn write_channel(topic_name: &str, data: *const c_void, size: usize) {
     }
 
     channel.log(&buf)
+}
+
+fn write_pointcloud(buf: &mut impl BufMut, data: *const c_void, data_size: usize) {
+    let raw_bytes = unsafe { slice::from_raw_parts(data as *const u8, data_size) };
+
+    PointCloud {
+        timestamp: None,
+        frame_id: "world".to_owned(),
+        pose: None,
+        point_stride: mem::size_of::<foxdbg_vector4_t>() as u32,
+        fields: vec![
+            PackedElementField {
+                name: "x".to_owned(),
+                offset: 0,
+                r#type: 7,
+            },
+            PackedElementField {
+                name: "y".to_owned(),
+                offset: 4,
+                r#type: 7,
+            },
+            PackedElementField {
+                name: "z".to_owned(),
+                offset: 8,
+                r#type: 7,
+            },
+            PackedElementField {
+                name: "intensity".to_owned(),
+                offset: 12,
+                r#type: 7,
+            },
+        ],
+        data: Bytes::copy_from_slice(raw_bytes),
+    }
+    .encode(buf)
+    .unwrap();
 }
 
 fn write_image(
@@ -79,9 +119,8 @@ fn write_image(
     compressor.set_subsamp(turbojpeg::Subsamp::Sub2x2).unwrap();
 
     let jpeg_data = compressor.compress_to_vec(image).unwrap();
-
     CompressedImage {
-        timestamp: None,
+        timestamp: None, // TODO: Need to check if these are needed
         frame_id: "".to_string(),
         data: Bytes::copy_from_slice(&jpeg_data),
         format: "JPEG".to_string(),
