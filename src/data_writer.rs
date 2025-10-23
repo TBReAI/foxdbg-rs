@@ -1,8 +1,7 @@
 use std::{ffi::c_void, sync::Arc};
 
-use foxglove::{
-    Context, Encode, RawChannel,
-};
+use foxglove::bytes::BufMut;
+use foxglove::{Context, Encode, RawChannel};
 
 use crate::channel_schemas::{Bool, Float, Integer};
 
@@ -17,16 +16,12 @@ pub fn write_channel(topic_name: &str, data: *const c_void, size: usize) {
         .get_channel_by_topic(topic_name)
         .expect("Channel could not be found");
 
+    let mut buf = vec![];
+
     match channel_type {
-        foxdbg_channel_type_t::FOXDBG_CHANNEL_TYPE_FLOAT => {
-            write_float(channel, unsafe { *(data as *const f32) })
-        }
-        foxdbg_channel_type_t::FOXDBG_CHANNEL_TYPE_INTEGER => {
-            write_int(channel, unsafe { *(data as *const u32) })
-        }
-        foxdbg_channel_type_t::FOXDBG_CHANNEL_TYPE_BOOLEAN => {
-            write_bool(channel, unsafe { *(data as *const bool) })
-        }
+        foxdbg_channel_type_t::FOXDBG_CHANNEL_TYPE_FLOAT => write_float(&mut buf, data),
+        foxdbg_channel_type_t::FOXDBG_CHANNEL_TYPE_INTEGER => write_int(&mut buf, data),
+        foxdbg_channel_type_t::FOXDBG_CHANNEL_TYPE_BOOLEAN => write_bool(&mut buf, data),
         foxdbg_channel_type_t::FOXDBG_CHANNEL_TYPE_IMAGE => {}
         foxdbg_channel_type_t::FOXDBG_CHANNEL_TYPE_POINTCLOUD => {}
         foxdbg_channel_type_t::FOXDBG_CHANNEL_TYPE_CUBES => {}
@@ -35,28 +30,23 @@ pub fn write_channel(topic_name: &str, data: *const c_void, size: usize) {
         foxdbg_channel_type_t::FOXDBG_CHANNEL_TYPE_TRANSFORM => {}
         foxdbg_channel_type_t::FOXDBG_CHANNEL_TYPE_LOCATION => {}
     }
-}
-
-fn write_int(channel: Arc<RawChannel>, data: u32) {
-    println!("{}", data);
-    let mut buf: Vec<u8> = vec![];
-    Integer { value: data }.encode(&mut buf);
 
     channel.log(&buf)
 }
 
-fn write_bool(channel: Arc<RawChannel>, data: bool) {
-    let mut buf: Vec<u8> = vec![];
-    Bool { value: data }.encode(&mut buf);
-
-    channel.log(&buf)
+fn write_int(buf: &mut impl BufMut, data: *const c_void) {
+    let value = unsafe { *(data as *const u32) };
+    Integer { value }.encode(buf).unwrap();
 }
 
-fn write_float(channel: Arc<RawChannel>, data: f32) {
-    let mut buf: Vec<u8> = vec![];
-    Float { value: data }.encode(&mut buf);
+fn write_bool(buf: &mut impl BufMut, data: *const c_void) {
+    let value = unsafe { *(data as *const bool) };
+    Bool { value }.encode(buf).unwrap();
+}
 
-    channel.log(&buf)
+fn write_float(buf: &mut impl BufMut, data: *const c_void) {
+    let value = unsafe { *(data as *const f32) };
+    Float { value }.encode(buf).unwrap();
 }
 
 pub fn write_channel_info(topic_name: &str, data: *const c_void, size: usize) {}
