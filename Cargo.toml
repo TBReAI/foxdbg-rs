@@ -8,6 +8,7 @@ crate-type = ["staticlib"]
 
 [dependencies]
 foxglove = "0.14.3"
+once_cell = { version = "1"}
 
 [build-dependencies]
 cbindgen = "0.29.0"
