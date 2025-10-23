@@ -93,7 +93,6 @@ int main(int argc, char *argv[])
         foxdbg_write_channel("/waves/int", &int_value, sizeof(int_value));
 
         YIELD_CPU();
-        sleep(1);
     }
 
     foxdbg_shutdown();

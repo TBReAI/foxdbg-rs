@@ -1,4 +1,4 @@
-use crate::foxdbg_channel_type_t;
+use crate::{foxdbg_channel_type_t, foxdbg_image_info_t};
 use foxglove::McapWriterHandle;
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
@@ -6,8 +6,22 @@ use std::fs::File;
 use std::io::BufWriter;
 use std::sync::{Mutex, OnceLock};
 
-pub static CHANNELS: Lazy<Mutex<HashMap<String, foxdbg_channel_type_t>>> =
+pub static CHANNELS: Lazy<Mutex<HashMap<String, ChannelState>>> =
     Lazy::new(|| Mutex::new(HashMap::new()));
+
+pub static MCAP_STATE: Lazy<McapState> = Lazy::new(McapState::new);
+
+#[derive(Debug)]
+pub struct ChannelState {
+    pub channel_type: foxdbg_channel_type_t,
+    pub channel_info: ChannelInfo,
+}
+
+#[derive(Debug)]
+pub enum ChannelInfo {
+    CompressedImageInfo(foxdbg_image_info_t),
+    NoInfo(),
+}
 
 // This is disgusting
 // OnceLock to stop the handle dropping
@@ -38,5 +52,3 @@ impl McapState {
         }
     }
 }
-
-pub static MCAP_STATE: Lazy<McapState> = Lazy::new(McapState::new);
