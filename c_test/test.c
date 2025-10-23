@@ -78,8 +78,8 @@ int main(int argc, char *argv[])
 
     while (is_running)
     {
-        // foxdbg_write_channel("/sensors/banana",  data,  width * height * channels);
-        // foxdbg_write_channel("/sensors/banana2", data2, width2 * height2 * channels2);
+        foxdbg_write_channel("/sensors/banana",  data,  width * height * channels);
+        foxdbg_write_channel("/sensors/banana2", data2, width2 * height2 * channels2);
 
         double t = get_time_seconds();
         float sin_value = sinf((float)(t * 2.0f * 3.14159f * 0.1f));
@@ -93,6 +93,7 @@ int main(int argc, char *argv[])
         foxdbg_write_channel("/waves/int", &int_value, sizeof(int_value));
 
         YIELD_CPU();
+        sleep(1);
     }
 
     foxdbg_shutdown();

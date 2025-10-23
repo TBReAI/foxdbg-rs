@@ -1,18 +1,45 @@
 use foxglove::Channel;
-use foxglove::schemas::{Log, };
+use foxglove::schemas::{CompressedImage, FrameTransform, LocationFix, PointCloud, SceneUpdate};
 use std::ffi::CStr;
 use std::os::raw::{c_char, c_int};
 
+use crate::channel_schemas::{Bool, Float, Integer};
 use crate::foxdbg_channel_type_t;
 
+use crate::state;
+
 pub fn add_channel(topic_name: &str, channel_type: foxdbg_channel_type_t, target_hz: c_int) {
-    let schema  = match channel_type {
+    match channel_type {
         foxdbg_channel_type_t::FOXDBG_CHANNEL_TYPE_FLOAT => {
-            let channel = Channel::<Log>::new(topic_name); },
-        _ => {
-            let channel = Channel::<Log>::new(topic_name);
+            Channel::<Float>::new(topic_name);
+        }
+        foxdbg_channel_type_t::FOXDBG_CHANNEL_TYPE_IMAGE => {
+            Channel::<CompressedImage>::new(topic_name);
+        }
+        foxdbg_channel_type_t::FOXDBG_CHANNEL_TYPE_POINTCLOUD => {
+            Channel::<PointCloud>::new(topic_name);
+        }
+        foxdbg_channel_type_t::FOXDBG_CHANNEL_TYPE_CUBES
+        | foxdbg_channel_type_t::FOXDBG_CHANNEL_TYPE_LINES
+        | foxdbg_channel_type_t::FOXDBG_CHANNEL_TYPE_POSE => {
+            Channel::<SceneUpdate>::new(topic_name);
+        }
+        foxdbg_channel_type_t::FOXDBG_CHANNEL_TYPE_TRANSFORM => {
+            Channel::<FrameTransform>::new(topic_name);
+        }
+        foxdbg_channel_type_t::FOXDBG_CHANNEL_TYPE_LOCATION => {
+            Channel::<LocationFix>::new(topic_name);
+        }
+        foxdbg_channel_type_t::FOXDBG_CHANNEL_TYPE_INTEGER => {
+            Channel::<Integer>::new(topic_name);
+        }
+        foxdbg_channel_type_t::FOXDBG_CHANNEL_TYPE_BOOLEAN => {
+            Channel::<Bool>::new(topic_name);
         }
     };
+
+    let mut channels = state::CHANNELS.lock().unwrap();
+    channels.insert(topic_name.to_string(), channel_type);
 }
 
 pub fn add_rx_channel(topic_name: &str, channel_type: foxdbg_channel_type_t) -> c_int {
