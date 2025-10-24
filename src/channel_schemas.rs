@@ -17,8 +17,3 @@ pub struct Integer {
 pub struct Bool {
     pub value: bool
 }
-
-pub enum ChannelInfo {
-    CompressedImageInfo(foxdbg_image_info_t),
-    NoInfo()
-}
