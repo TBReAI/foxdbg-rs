@@ -13,6 +13,7 @@
 #if defined(_MSC_VER)
     #include <windows.h>
     #define YIELD_CPU() Sleep(0)
+    #define sleep(seconds) Sleep((seconds) * 1000)
     #define ATOMIC_READ_INT(ptr) InterlockedCompareExchange((volatile LONG *)(ptr), 0, 0)
     #define ATOMIC_WRITE_INT(ptr, val) InterlockedExchange((volatile LONG *)(ptr), (val))
 #else
