@@ -9,6 +9,7 @@
 #include <time.h>
 #include <signal.h>
 #include <math.h>
+#include <stdlib.h>
 
 #if defined(_MSC_VER)
     #include <windows.h>
@@ -57,6 +58,7 @@ int main(int argc, char *argv[])
     foxdbg_add_channel("/waves/sin",  FOXDBG_CHANNEL_TYPE_FLOAT, 30);
     foxdbg_add_channel("/waves/bool", FOXDBG_CHANNEL_TYPE_BOOLEAN, 30);
     foxdbg_add_channel("/waves/int",  FOXDBG_CHANNEL_TYPE_INTEGER, 30);
+    foxdbg_add_channel("/pointclouds/test", FOXDBG_CHANNEL_TYPE_POINTCLOUD, 30);
 
     // int rx_channel = foxdbg_add_rx_channel("/rx/system_state", FOXDBG_CHANNEL_TYPE_BOOLEAN);
 
@@ -77,6 +79,9 @@ int main(int argc, char *argv[])
     foxdbg_image_info_t image_info2 = { width2, height2, channels2 };
     foxdbg_write_channel_info("/sensors/banana2", &image_info2, sizeof(image_info2));
 
+    const int num_points = 100;
+    foxdbg_vector4_t* pointcloud = (foxdbg_vector4_t*)malloc(num_points * sizeof(foxdbg_vector4_t));
+
     while (is_running)
     {
         foxdbg_write_channel("/sensors/banana",  data,  width * height * channels);
@@ -93,10 +98,19 @@ int main(int argc, char *argv[])
         int_value++;
         foxdbg_write_channel("/waves/int", &int_value, sizeof(int_value));
 
+        for (int i = 0; i < num_points; i++) {
+            float time_offset = (float)t * 2.0f;
+            pointcloud[i].x = sinf(i * 0.1f + time_offset) * 5.0f;
+            pointcloud[i].y = cosf(i * 0.1f + time_offset) * 5.0f;
+            pointcloud[i].z = i * 0.1f - 5.0f;
+            pointcloud[i].w = 255.f;
+        }
+        foxdbg_write_channel("/pointclouds/test", pointcloud, num_points * sizeof(foxdbg_vector4_t));
+
         YIELD_CPU();
-        sleep(1);
     }
 
+    free(pointcloud);
     foxdbg_shutdown();
     return 0;
 }

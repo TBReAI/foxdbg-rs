@@ -6,7 +6,7 @@ use std::os::raw::{c_char, c_int};
 use crate::channel_schemas::{Bool, Float, Integer};
 use crate::foxdbg_channel_type_t;
 
-use crate::state;
+use crate::state::{self, ChannelInfo, ChannelState};
 
 pub fn add_channel(topic_name: &str, channel_type: foxdbg_channel_type_t, target_hz: c_int) {
     match channel_type {
@@ -39,7 +39,12 @@ pub fn add_channel(topic_name: &str, channel_type: foxdbg_channel_type_t, target
     };
 
     let mut channels = state::CHANNELS.lock().unwrap();
-    channels.insert(topic_name.to_string(), channel_type);
+    let state = ChannelState {
+        channel_type: channel_type,
+        channel_info: ChannelInfo::NoInfo(),
+    };
+
+    channels.insert(topic_name.to_string(), state);
 }
 
 pub fn add_rx_channel(topic_name: &str, channel_type: foxdbg_channel_type_t) -> c_int {
