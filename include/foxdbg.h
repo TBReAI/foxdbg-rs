@@ -103,16 +103,11 @@ int foxdbg_add_channel(const char *topic_name,
                        int target_hz);
 
 /**
- * Creates a channel to receive data from Foxglove (for simple types like float, integer, boolean).
- */
-int foxdbg_add_rx_channel(const char *topic_name, enum foxdbg_channel_type_t channel_type);
-
-/**
  * Writes a data payload to a specified channel.
  */
-void foxdbg_write_channel(const char *topic_name, const void *data, uintptr_t size);
+void foxdbg_write_channel(int channel_id, const void *data, uintptr_t size);
 
 /**
  * Writes metadata for a channel, used for types like images to specify dimensions.
  */
-void foxdbg_write_channel_info(const char *topic_name, const void *data, uintptr_t size);
+void foxdbg_write_channel_info(int channel_id, const void *data, uintptr_t size);

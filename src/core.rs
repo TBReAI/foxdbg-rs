@@ -14,6 +14,7 @@ pub fn init() {
         .duration_since(UNIX_EPOCH)
         .expect("Time is set before UNIX_EPOCH")
         .as_secs();
+
     let handle = foxglove::McapWriter::new()
         .create_new_buffered_file(format!("{:?}.mcap", unix_time))
         .expect("Failed to create writer");

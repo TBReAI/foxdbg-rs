@@ -1,14 +1,17 @@
-use foxglove::Channel;
 use foxglove::schemas::{CompressedImage, FrameTransform, LocationFix, PointCloud, SceneUpdate};
-use std::ffi::CStr;
-use std::os::raw::{c_char, c_int};
+use foxglove::{Channel, Context};
+use std::os::raw::{c_int};
 
-use crate::channel_schemas::{Bool, Float, Integer};
+use super::schemas::{Bool, Float, Integer};
 use crate::foxdbg_channel_type_t;
 
 use crate::state::{self, ChannelInfo, ChannelState};
 
-pub fn add_channel(topic_name: &str, channel_type: foxdbg_channel_type_t, target_hz: c_int) {
+pub fn add_channel(
+    topic_name: &str,
+    channel_type: foxdbg_channel_type_t,
+    _target_hz: c_int,
+) -> u64 {
     match channel_type {
         foxdbg_channel_type_t::FOXDBG_CHANNEL_TYPE_FLOAT => {
             Channel::<Float>::new(topic_name);
@@ -38,31 +41,18 @@ pub fn add_channel(topic_name: &str, channel_type: foxdbg_channel_type_t, target
         }
     };
 
+    let channel_id = Context::get_default()
+        .get_channel_by_topic(topic_name)
+        .unwrap()
+        .id();
+
     let mut channels = state::CHANNELS.lock().unwrap();
     let state = ChannelState {
         channel_type: channel_type,
         channel_info: ChannelInfo::NoInfo(),
+        channel_topic: topic_name.to_owned() 
     };
 
-    channels.insert(topic_name.to_string(), state);
-}
-
-pub fn add_rx_channel(topic_name: &str, channel_type: foxdbg_channel_type_t) -> c_int {
-    println!(
-        "channel_manager::add_rx_channel called with topic: {}, type: {:?}",
-        topic_name, channel_type
-    );
-    // Placeholder: return a dummy channel ID
-    2
-}
-
-pub fn get_rx_channel(topic_name: *const c_char) -> c_int {
-    let c_str = unsafe { CStr::from_ptr(topic_name) };
-    let topic_name_str = c_str.to_str().unwrap_or("invalid_topic");
-    println!(
-        "channel_manager::get_rx_channel called with topic: {}",
-        topic_name_str
-    );
-    // Placeholder: return a dummy channel ID
-    2
+    channels.insert(channel_id, state);
+    channel_id.into()
 }

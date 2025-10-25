@@ -1,7 +1,4 @@
-/// This file defines custom message schemas to be used by channels
 use foxglove::Encode;
-
-use crate::foxdbg_image_info_t;
 
 #[derive(Encode)]
 pub struct Float {
@@ -10,7 +7,7 @@ pub struct Float {
 
 #[derive(Encode)]
 pub struct Integer {
-    pub value: u32
+    pub value: i32
 }
 
 #[derive(Encode)]

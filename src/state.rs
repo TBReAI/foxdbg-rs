@@ -1,12 +1,12 @@
 use crate::{foxdbg_channel_type_t, foxdbg_image_info_t};
-use foxglove::McapWriterHandle;
+use foxglove::{ChannelId, McapWriterHandle};
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufWriter;
 use std::sync::{Mutex, OnceLock};
 
-pub static CHANNELS: Lazy<Mutex<HashMap<String, ChannelState>>> =
+pub static CHANNELS: Lazy<Mutex<HashMap<ChannelId, ChannelState>>> =
     Lazy::new(|| Mutex::new(HashMap::new()));
 
 pub static MCAP_STATE: Lazy<McapState> = Lazy::new(McapState::new);
@@ -15,6 +15,7 @@ pub static MCAP_STATE: Lazy<McapState> = Lazy::new(McapState::new);
 pub struct ChannelState {
     pub channel_type: foxdbg_channel_type_t,
     pub channel_info: ChannelInfo,
+    pub channel_topic: String,
 }
 
 #[derive(Debug)]
