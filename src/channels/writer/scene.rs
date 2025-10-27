@@ -11,6 +11,18 @@ use crate::types::{foxdbg_cube_t, foxdbg_line_t, foxdbg_pose_t, foxdbg_transform
 
 use super::helpers::{data_as_ref, data_as_slice, euler_to_quaternion};
 
+/// A generic helper function for creating and encoding `SceneUpdate` messages.
+///
+/// This function simplifies the process of sending scene updates to Foxglove by handling
+/// the boilerplate of creating a `SceneEntity` and a `SceneUpdate`. It takes a `mutator`
+/// closure that can be used to customize the `SceneEntity` before it's encoded.
+///
+/// # Arguments
+///
+/// * `buf` - The buffer to write the encoded `SceneUpdate` to.
+/// * `topic_name` - The name of the topic to associate with the `SceneEntity`.
+/// * `mutator` - A closure that takes a mutable reference to a `SceneEntity` and
+///   modifies it as needed.
 fn write_scene_update(
     buf: &mut impl BufMut,
     topic_name: &str,

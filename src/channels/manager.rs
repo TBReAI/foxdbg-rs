@@ -1,16 +1,28 @@
 use foxglove::schemas::{CompressedImage, FrameTransform, LocationFix, PointCloud, SceneUpdate};
 use foxglove::{Channel, Context};
-use std::os::raw::{c_int};
 
 use super::schemas::{Bool, Float, Integer};
 use crate::foxdbg_channel_type_t;
 
 use crate::state::{self, ChannelInfo, ChannelState};
 
+/// Creates a new channel for publishing data to Foxglove.
+///
+/// This function takes a topic name and a channel type, creates a new Foxglove channel
+/// with the appropriate schema, and stores the channel's state in the global `CHANNELS`
+/// map. It returns a channel ID that can be used to publish data to the channel.
+///
+/// # Arguments
+///
+/// * `topic_name` - The name of the topic to create.
+/// * `channel_type` - The type of data that will be published on the channel.
+///
+/// # Returns
+///
+/// The ID of the newly created channel.
 pub fn add_channel(
     topic_name: &str,
     channel_type: foxdbg_channel_type_t,
-    _target_hz: c_int,
 ) -> u64 {
     match channel_type {
         foxdbg_channel_type_t::FOXDBG_CHANNEL_TYPE_FLOAT => {

@@ -14,16 +14,12 @@ pub use types::*;
 
 // FFI functions
 
-/// Initializes the debugging system and starts the server thread.
+/// Initialises the debugging system and starts the server thread.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn foxdbg_init() {
+    let env = env_logger::Env::default().default_filter_or("info");
+    env_logger::init_from_env(env);
     core::init();
-}
-
-/// Polls for received data callbacks. This should be called periodically in your application's main loop to process incoming messages.
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn foxdbg_update() {
-    core::update();
 }
 
 /// Shuts down the server and cleans up resources.
@@ -38,14 +34,14 @@ pub unsafe extern "C" fn foxdbg_shutdown() {
 pub unsafe extern "C" fn foxdbg_add_channel(
     topic_name: *const std::os::raw::c_char,
     channel_type: foxdbg_channel_type_t,
-    target_hz: std::os::raw::c_int,
+    _target_hz: std::os::raw::c_int,
 ) -> std::os::raw::c_int {
     let topic_name_str = unsafe {
         CStr::from_ptr(topic_name)
             .to_str()
             .unwrap_or("invalid_topic")
     };
-    channels::manager::add_channel(topic_name_str, channel_type, target_hz) as i32
+    channels::manager::add_channel(topic_name_str, channel_type) as i32
 }
 
 /// Writes a data payload to a specified channel.
