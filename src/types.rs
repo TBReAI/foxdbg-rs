@@ -1,7 +1,6 @@
 #![allow(non_camel_case_types)]
 use std::os::raw::c_char;
 
-// Make sure memory layout matches C
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct foxdbg_color_t {
@@ -45,6 +44,7 @@ pub struct foxdbg_cube_t {
     pub color: foxdbg_color_t,
 }
 
+/// Represents a transform between two coordinate frames.
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct foxdbg_transform_t {

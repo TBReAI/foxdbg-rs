@@ -51,6 +51,9 @@ typedef struct foxdbg_cube_t {
   struct foxdbg_color_t color;
 } foxdbg_cube_t;
 
+/**
+ * Represents a transform between two coordinate frames.
+ */
 typedef struct foxdbg_transform_t {
   const char *id;
   const char *parent_id;
@@ -80,14 +83,9 @@ typedef struct foxdbg_image_info_t {
 } foxdbg_image_info_t;
 
 /**
- * Initializes the debugging system and starts the server thread.
+ * Initialises the debugging system and starts the server thread.
  */
 void foxdbg_init(void);
-
-/**
- * Polls for received data callbacks. This should be called periodically in your application's main loop to process incoming messages.
- */
-void foxdbg_update(void);
 
 /**
  * Shuts down the server and cleans up resources.
@@ -100,19 +98,14 @@ void foxdbg_shutdown(void);
  */
 int foxdbg_add_channel(const char *topic_name,
                        enum foxdbg_channel_type_t channel_type,
-                       int target_hz);
-
-/**
- * Creates a channel to receive data from Foxglove (for simple types like float, integer, boolean).
- */
-int foxdbg_add_rx_channel(const char *topic_name, enum foxdbg_channel_type_t channel_type);
+                       int _target_hz);
 
 /**
  * Writes a data payload to a specified channel.
  */
-void foxdbg_write_channel(const char *topic_name, const void *data, uintptr_t size);
+void foxdbg_write_channel(int channel_id, const void *data, uintptr_t size);
 
 /**
  * Writes metadata for a channel, used for types like images to specify dimensions.
  */
-void foxdbg_write_channel_info(const char *topic_name, const void *data, uintptr_t size);
+void foxdbg_write_channel_info(int channel_id, const void *data, uintptr_t size);
