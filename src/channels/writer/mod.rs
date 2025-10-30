@@ -4,7 +4,7 @@ pub mod telemetry;
 
 mod helpers;
 
-use foxglove::Context;
+use foxglove::{Context, PartialMetadata, ToUnixNanos};
 use helpers::data_as_ref;
 use std::cell::RefCell;
 use std::ffi::c_void;
@@ -83,7 +83,7 @@ pub unsafe fn write_channel(channel_state: &ChannelState, data: *const c_void, s
                 }
             }
         }
-
+        
         channel.log(&buf);
     });
 }

@@ -1,8 +1,7 @@
 use foxglove::Encode;
 use foxglove::bytes::BufMut;
 use foxglove::schemas::{
-    ArrowPrimitive, Color, CubePrimitive, FrameTransform, LinePrimitive, Point3, Pose, Quaternion,
-    SceneEntity, SceneUpdate, Vector3,
+    ArrowPrimitive, Color, CubePrimitive, FrameTransform, LinePrimitive, Point3, Pose, Quaternion, SceneEntity, SceneUpdate, Timestamp, Vector3
 };
 use std::f32::consts::FRAC_PI_2;
 use std::ffi::{CStr, c_void};
@@ -29,7 +28,7 @@ fn write_scene_update(
     mutator: impl FnOnce(&mut SceneEntity),
 ) {
     let mut entity = SceneEntity {
-        timestamp: None,
+        timestamp: Some(Timestamp::now()),
         frame_id: "world".to_owned(),
         id: topic_name.to_owned(),
         lifetime: None,
@@ -79,7 +78,7 @@ pub(super) unsafe fn write_transform(buf: &mut impl BufMut, data: *const c_void,
         let rotation = euler_to_quaternion(&transform_data.orientation, 0.0);
 
         FrameTransform {
-            timestamp: None,
+            timestamp: Some(Timestamp::now()),
             parent_frame_id,
             child_frame_id,
             translation: Some(translation),

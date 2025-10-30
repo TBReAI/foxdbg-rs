@@ -37,7 +37,7 @@ pub(super) unsafe fn write_pointcloud(
     let raw_bytes = unsafe { slice::from_raw_parts(data as *const u8, data_size) };
 
     PointCloud {
-        timestamp: None,
+        timestamp:Some( Timestamp::now()),
         frame_id: "world".to_owned(),
         pose: None,
                 // The point stride is the size of the `foxdbg_vector4_t` struct in bytes.
@@ -102,7 +102,7 @@ pub(super) unsafe fn write_image(
     let image = Image {
         pixels: raw_slice,
         width: image_info.width as usize,
-        pitch: pitch,
+        pitch,
         height: image_info.height as usize,
         format: pixel_format,
     };
@@ -113,7 +113,7 @@ pub(super) unsafe fn write_image(
 
     let jpeg_data = compressor.compress_to_vec(image).unwrap();
     CompressedImage {
-        timestamp: None,
+        timestamp: Some(Timestamp::now()),
         frame_id: "world".to_string(),
         data: Bytes::copy_from_slice(&jpeg_data),
         format: "JPEG".to_string(),
