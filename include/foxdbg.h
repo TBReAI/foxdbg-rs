@@ -55,6 +55,9 @@ typedef struct foxdbg_cube_t {
   struct foxdbg_color_t color;
 } foxdbg_cube_t;
 
+/**
+ * Represents a transform between two coordinate frames.
+ */
 typedef struct foxdbg_transform_t {
   const char *id;
   const char *parent_id;
@@ -88,14 +91,9 @@ extern "C" {
 #endif // __cplusplus
 
 /**
- * Initializes the debugging system and starts the server thread.
+ * Initialises the debugging system and starts the server thread.
  */
 void foxdbg_init(void);
-
-/**
- * Polls for received data callbacks. This should be called periodically in your application's main loop to process incoming messages.
- */
-void foxdbg_update(void);
 
 /**
  * Shuts down the server and cleans up resources.
@@ -108,7 +106,7 @@ void foxdbg_shutdown(void);
  */
 int foxdbg_add_channel(const char *topic_name,
                        enum foxdbg_channel_type_t channel_type,
-                       int target_hz);
+                       int _target_hz);
 
 /**
  * Writes a data payload to a specified channel.
