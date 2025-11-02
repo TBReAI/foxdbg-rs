@@ -32,10 +32,14 @@ jobs:
           targets: ${{ matrix.target }}
       - name: Install cbindgen
         run: cargo install cbindgen
+      - name: Install cmake
+        run: sudo apt-get update && sudo apt-get install -y cmake
+      - name: Install nasm
+        run: sudo apt-get install -y nasm
       - name: Build static lib
         run: cargo build --release --target ${{ matrix.target }}
       - name: Generate header
-        run: cbindgen --config cbindgen.toml --crate . --output include/foxdbg.h
+        run: cbindgen --config cbindgen.toml --output include/foxdbg.h
       - name: Package
         shell: bash
         run: |
@@ -44,9 +48,9 @@ jobs:
           mkdir -p "${OUT}/include" "${OUT}/lib" "${OUT}/cmake"
           cp include/foxdbg.h "${OUT}/include/"
           if [[ "${{ matrix.target }}" == *windows-msvc ]]; then
-            cp "target/${{ matrix.target }}/release/foxdbg.lib" "${OUT}/lib/"
+            cp "target/${{ matrix.target }}/release/foxdbg_rs.lib" "${OUT}/lib/"
           else
-            cp "target/${{ matrix.target }}/release/libfoxdbg.a" "${OUT}/lib/"
+            cp "target/${{ matrix.target }}/release/libfoxdbg_rs.a" "${OUT}/lib/"
           fi
           [[ -f cmake/foxdbgConfig.cmake ]] && cp cmake/foxdbgConfig.cmake "${OUT}/cmake/"
           zip -r "${OUT}.zip" "${OUT}"
