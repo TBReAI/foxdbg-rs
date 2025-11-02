@@ -9,17 +9,18 @@
 #include <time.h>
 #include <signal.h>
 #include <math.h>
-#include <unistd.h>
-#include <stdatomic.h>
-#include <sched.h>
-#include <stdlib.h>
 
 #if defined(_MSC_VER)
     #include <windows.h>
     #define YIELD_CPU() Sleep(0)
+    #define sleep(seconds) Sleep((seconds) * 1000)
     #define ATOMIC_READ_INT(ptr) InterlockedCompareExchange((volatile LONG *)(ptr), 0, 0)
     #define ATOMIC_WRITE_INT(ptr, val) InterlockedExchange((volatile LONG *)(ptr), (val))
 #else
+    #include <unistd.h>
+    #include <sched.h>
+    #include <stdatomic.h>
+    #include <stdlib.h>
     #define YIELD_CPU() sched_yield()
     #define ATOMIC_READ_INT(ptr) atomic_load_explicit((ptr), memory_order_seq_cst)
     #define ATOMIC_WRITE_INT(ptr, val) atomic_store_explicit((ptr), (val), memory_order_seq_cst)
