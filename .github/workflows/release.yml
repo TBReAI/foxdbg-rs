@@ -6,54 +6,78 @@ on:
 
 jobs:
   build:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-          - os: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-          - os: windows-latest
-            target: aarch64-pc-windows-msvc
-          - os: macos-latest
-            target: x86_64-apple-darwin
-          - os: macos-latest
-            target: aarch64-apple-darwin
-
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.target }}
+          targets: x86_64-unknown-linux-gnu,x86_64-pc-windows-msvc,aarch64-apple-darwin
       - name: Install cbindgen
         run: cargo install cbindgen
-      - name: Build static lib
-        run: cargo build --release --target ${{ matrix.target }}
+      - name: Install cmake and nasm
+        run: sudo apt-get update && sudo apt-get install -y cmake nasm
+      - name: Install cross-compilation tools
+        run: |
+          sudo apt-get install -y clang lld llvm
+          # Install zig for macOS cross-compilation
+          curl -L https://ziglang.org/download/0.13.0/zig-linux-x86_64-0.13.0.tar.xz | tar -xJ
+          sudo mv zig-linux-x86_64-0.13.0 /usr/local/zig
+          echo "/usr/local/zig" >> $GITHUB_PATH
+          # Set up clang as linker for MSVC target
+          echo "CC_x86_64_pc_windows_msvc=clang" >> $GITHUB_ENV
+          echo "CXX_x86_64_pc_windows_msvc=clang++" >> $GITHUB_ENV
+          echo "AR_x86_64_pc_windows_msvc=llvm-ar" >> $GITHUB_ENV
+      - name: Build Linux static lib
+        run: cargo build --release --target x86_64-unknown-linux-gnu
+      - name: Build Windows MSVC static lib
+        run: cargo build --release --target x86_64-pc-windows-msvc
+      - name: Build macOS static lib
+        run: cargo build --release --target aarch64-apple-darwin
       - name: Generate header
-        run: cbindgen --config cbindgen.toml --crate . --output include/foxdbg.h
-      - name: Package
+        run: cbindgen --config cbindgen.toml --output include/foxdbg.h
+      - name: Package Linux
         shell: bash
         run: |
           VER="${GITHUB_REF_NAME}"
-          OUT="foxdbg-${VER}-${{ matrix.target }}"
+          OUT="foxdbg-${VER}-x86_64-unknown-linux-gnu"
           mkdir -p "${OUT}/include" "${OUT}/lib" "${OUT}/cmake"
           cp include/foxdbg.h "${OUT}/include/"
-          if [[ "${{ matrix.target }}" == *windows-msvc ]]; then
-            cp "target/${{ matrix.target }}/release/foxdbg.lib" "${OUT}/lib/"
-          else
-            cp "target/${{ matrix.target }}/release/libfoxdbg.a" "${OUT}/lib/"
-          fi
+          cp "target/x86_64-unknown-linux-gnu/release/libfoxdbg_rs.a" "${OUT}/lib/"
+          [[ -f cmake/foxdbgConfig.cmake ]] && cp cmake/foxdbgConfig.cmake "${OUT}/cmake/"
+          zip -r "${OUT}.zip" "${OUT}"
+      - name: Package Windows MSVC
+        shell: bash
+        run: |
+          VER="${GITHUB_REF_NAME}"
+          OUT="foxdbg-${VER}-x86_64-pc-windows-msvc"
+          mkdir -p "${OUT}/include" "${OUT}/lib" "${OUT}/cmake"
+          cp include/foxdbg.h "${OUT}/include/"
+          cp "target/x86_64-pc-windows-msvc/release/foxdbg_rs.lib" "${OUT}/lib/"
+          [[ -f cmake/foxdbgConfig.cmake ]] && cp cmake/foxdbgConfig.cmake "${OUT}/cmake/"
+          zip -r "${OUT}.zip" "${OUT}"
+      - name: Package macOS
+        shell: bash
+        run: |
+          VER="${GITHUB_REF_NAME}"
+          OUT="foxdbg-${VER}-aarch64-apple-darwin"
+          mkdir -p "${OUT}/include" "${OUT}/lib" "${OUT}/cmake"
+          cp include/foxdbg.h "${OUT}/include/"
+          cp "target/aarch64-apple-darwin/release/libfoxdbg_rs.a" "${OUT}/lib/"
           [[ -f cmake/foxdbgConfig.cmake ]] && cp cmake/foxdbgConfig.cmake "${OUT}/cmake/"
           zip -r "${OUT}.zip" "${OUT}"
       - uses: actions/upload-artifact@v4
         with:
-          name: foxdbg-${{ matrix.target }}
-          path: foxdbg-*.zip
+          name: foxdbg-linux
+          path: foxdbg-*-x86_64-unknown-linux-gnu.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: foxdbg-windows
+          path: foxdbg-*-x86_64-pc-windows-msvc.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: foxdbg-macos
+          path: foxdbg-*-aarch64-apple-darwin.zip
 
   publish:
     needs: build
