@@ -1,0 +1,69 @@
+name: build-release-assets
+
+on:
+  push:
+    tags: ['v*.*.*']
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            target: aarch64-pc-windows-msvc
+          - os: macos-latest
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            target: aarch64-apple-darwin
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - name: Install cbindgen
+        run: cargo install cbindgen
+      - name: Build static lib
+        run: cargo build --release --target ${{ matrix.target }}
+      - name: Generate header
+        run: cbindgen --config cbindgen.toml --crate . --output include/foxdbg.h
+      - name: Package
+        shell: bash
+        run: |
+          VER="${GITHUB_REF_NAME}"
+          OUT="foxdbg-${VER}-${{ matrix.target }}"
+          mkdir -p "${OUT}/include" "${OUT}/lib" "${OUT}/cmake"
+          cp include/foxdbg.h "${OUT}/include/"
+          if [[ "${{ matrix.target }}" == *windows-msvc ]]; then
+            cp "target/${{ matrix.target }}/release/foxdbg.lib" "${OUT}/lib/"
+          else
+            cp "target/${{ matrix.target }}/release/libfoxdbg.a" "${OUT}/lib/"
+          fi
+          [[ -f cmake/foxdbgConfig.cmake ]] && cp cmake/foxdbgConfig.cmake "${OUT}/cmake/"
+          zip -r "${OUT}.zip" "${OUT}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: foxdbg-${{ matrix.target }}
+          path: foxdbg-*.zip
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+      - name: Collect zips
+        run: find dist -name 'foxdbg-*.zip' -maxdepth 2 -print -exec cp {} . \;
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: foxdbg-*.zip
